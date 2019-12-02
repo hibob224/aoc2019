@@ -19,25 +19,18 @@ object Day2 {
     }
 
     fun solvePartTwo(): String {
-        var noun = 0
-        var verb = -1
-        var output = 0
-
-        do {
-            if (verb == 99) {
-                verb = 0
-                noun++
-            } else {
-                verb++
+        for (n in 0..99) {
+            for (v in 0..99) {
+                val input = ArrayList(input)
+                input[1] = n
+                input[2] = v
+                val output = runProgram(input)
+                if (output == 19690720) {
+                    return (100 * n + v).toString()
+                }
             }
-
-            val input = ArrayList(input)
-            input[1] = noun
-            input[2] = verb
-            output = runProgram(input)
-        } while (output != 19690720)
-
-        return  (100 * noun + verb).toString()
+        }
+        throw IllegalStateException("Didn't find answer")
     }
 
     private fun runProgram(input: ArrayList<Int>): Int {
@@ -47,10 +40,6 @@ object Day2 {
             val inp1 = input[position.inc()]
             val inp2 = input[position.inc().inc()]
             val out = input[position.inc().inc().inc()]
-
-            if (inp1 > input.lastIndex || inp2 > input.lastIndex || out > input.lastIndex) {
-                return -1 // Exception
-            }
 
             when (opcode) {
                 1 -> input[out] = input[inp1] + input[inp2]
