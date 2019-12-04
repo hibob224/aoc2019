@@ -1,16 +1,15 @@
 package dayN
 
-import day03.Day3
 import java.io.File
 
 fun main() {
-    println("Part one: ${Day3.solvePartOne()}")
-    println("Parse two: ${Day3.solvePartTwo()}")
+    println("Part one: ${DayN.solvePartOne()}")
+    println("Parse two: ${DayN.solvePartTwo()}")
 }
 
 object DayN {
 
-    fun parseInput(): List<String> = File("src/main/kotlin/dayN/input.txt").readLines()
+    private fun parseInput(): List<String> = File("src/main/kotlin/dayN/input.txt").readLines()
 
     fun solvePartOne(): String {
         return ""

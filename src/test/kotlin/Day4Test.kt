@@ -1,17 +1,17 @@
-import day01.Day1
+import day04.Day4
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 
-internal class Day1Test {
+internal class Day4Test {
 
     @Test
     fun solvePartOne() {
-        assertEquals(Day1.solvePartOne(), "3232358")
+        assertEquals("1154", Day4.solvePartOne())
     }
 
     @Test
     fun solvePartTwo() {
-        assertEquals(Day1.solvePartTwo(), "4845669")
+        assertEquals("750", Day4.solvePartTwo())
     }
 }
