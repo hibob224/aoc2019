@@ -1,27 +1,117 @@
-package day05
+package day07
 
+import day05.Day5
 import utils.then
 import java.io.File
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import kotlin.math.max
 
 fun main() {
-    println("Part one: ${Day5.solvePartOne()}")
-    println("Parse two: ${Day5.solvePartTwo()}")
+    println("Part one: ${Day7.solvePartOne()}")
+    println("Part two: ${Day7.solvePartTwo()}")
 }
 
-object Day5 {
+object Day7 {
 
-    private fun parseInput(): List<Int> = File("src/main/kotlin/day05/input.txt")
-        .readLines()[0]
+    private fun parseInput(): List<Int> = File("src/main/kotlin/day07/input.txt")
+        .readLines()
+        .first()
         .split(",")
         .map { it.toInt() }
 
-    fun solvePartOne(): String = doOperation(listOf(1)).toString()
+    fun solvePartOne(): String {
+        var highestSignal = 0
 
-    fun solvePartTwo(): String = doOperation(listOf(5)).toString()
+        permutations(0..4).forEach {
+            val aOutput = Day5.doOperation(listOf(it.a), parseInput().toMutableList())
+            val bOutput = Day5.doOperation(listOf(it.b, aOutput), parseInput().toMutableList())
+            val cOutput = Day5.doOperation(listOf(it.c, bOutput), parseInput().toMutableList())
+            val dOutput = Day5.doOperation(listOf(it.d, cOutput), parseInput().toMutableList())
+            val eOutput = Day5.doOperation(listOf(it.e, dOutput), parseInput().toMutableList())
+            highestSignal = max(highestSignal, eOutput)
+        }
 
-    fun doOperation(input: List<Int>, data: MutableList<Int> = parseInput().toMutableList()): Int {
-        var inputPosition = 0
-        val outputs = mutableListOf<Int>()
+        return highestSignal.toString()
+    }
+
+    fun solvePartTwo(): String {
+        var highestSignal = 0
+        val range = 5..9
+
+        permutations(5..9).forEach { perm ->
+            val ampE = Amp().also {
+                it.inputs.add(perm.e)
+            }
+            val ampD = Amp().also {
+                it.inputs.add(perm.d)
+                it.nextAmp = ampE
+            }
+            val ampC = Amp().also {
+                it.inputs.add(perm.c)
+                it.nextAmp = ampD
+            }
+            val ampB = Amp().also {
+                it.inputs.add(perm.b)
+                it.nextAmp = ampC
+            }
+            val ampA = Amp().also {
+                it.inputs.addAll(listOf(perm.a, 0)) // Amp A gets an extra starting input of 0 as per instructions
+                it.nextAmp = ampB
+            }
+            ampE.nextAmp = ampA
+
+            Executors.newCachedThreadPool().also {
+                it.submit(ampA)
+                it.submit(ampB)
+                it.submit(ampC)
+                it.submit(ampD)
+                highestSignal = max(highestSignal, it.submit(ampE).get())
+            }
+        }
+
+        return highestSignal.toString()
+    }
+
+    private fun permutations(range: IntRange): List<Permutation> {
+        val permutations = mutableListOf<Permutation>()
+        for (a in range) {
+            for (b in range) {
+                for (c in range) {
+                    for (d in range) {
+                        for (e in range) {
+                            if (setOf(a, b, c, d, e).size != 5) {
+                                // Don't want any duplicate inputs
+                                continue
+                            }
+                            permutations.add(Permutation(a, b, c, d, e))
+                        }
+                    }
+                }
+            }
+        }
+        return permutations
+    }
+
+    data class Permutation(
+        val a: Int,
+        val b: Int,
+        val c: Int,
+        val d: Int,
+        val e: Int)
+
+    data class Amp(
+        val memory: MutableList<Int> = parseInput().toMutableList(),
+        var latestOutput: Int = -1) : Callable<Int> {
+        lateinit var nextAmp: Amp // Next amp in line which will receive output from this amp
+        val inputs = LinkedBlockingQueue<Int>()
+
+        override fun call(): Int = doOperation(this)
+    }
+
+    fun doOperation(amp: Amp): Int {
+        val data = amp.memory
         var position = 0
 
         do {
@@ -66,8 +156,7 @@ object Day5 {
                 }
                 3 -> {
                     val out = data[position.inc()]
-                    data[out] = input.getOrElse(inputPosition) { 0 }
-                    inputPosition++
+                    data[out] = amp.inputs.take() // Will block here until we get a value from previous amp
                     position += 2
                 }
                 4 -> {
@@ -76,7 +165,8 @@ object Day5 {
                     } else {
                         data[position.inc()]
                     }
-                    outputs.add(out)
+                    amp.latestOutput = out
+                    amp.nextAmp.inputs.add(out)
                     position += 2
                 }
                 5 -> {
@@ -143,7 +233,9 @@ object Day5 {
                     data[out] = (inp1 == inp2) then 1 ?: 0
                     position += 4
                 }
-                99 -> return outputs.last()
+                99 -> {
+                    return amp.latestOutput
+                }
                 else -> throw IllegalStateException("Unknown opcode $opcode")
             }
         } while (true)
