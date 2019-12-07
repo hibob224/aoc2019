@@ -4,7 +4,7 @@ import java.io.File
 
 fun main() {
     println("Part one: ${Day6.solvePartOne()}")
-    println("Parse two: ${Day6.solvePartTwo()}")
+    println("Part two: ${Day6.solvePartTwo()}")
 }
 
 object Day6 {

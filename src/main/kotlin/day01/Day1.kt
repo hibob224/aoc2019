@@ -3,9 +3,9 @@ package day01
 import utils.orZero
 import java.io.File
 
-fun main(args: Array<String>) {
+fun main() {
     println("Part one: ${Day1.solvePartOne()}")
-    println("Parse two: ${Day1.solvePartTwo()}")
+    println("Part two: ${Day1.solvePartTwo()}")
 }
 
 object Day1 {

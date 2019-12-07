@@ -2,9 +2,9 @@ package day02
 
 import java.io.File
 
-fun main(args: Array<String>) {
+fun main() {
     println("Part one: ${Day2.solvePartOne()}")
-    println("Parse two: ${Day2.solvePartTwo()}")
+    println("Part two: ${Day2.solvePartTwo()}")
 }
 
 object Day2 {

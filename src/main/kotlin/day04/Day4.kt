@@ -4,7 +4,7 @@ import utils.orFalse
 
 fun main() {
     println("Part one: ${Day4.solvePartOne()}")
-    println("Parse two: ${Day4.solvePartTwo()}")
+    println("Part two: ${Day4.solvePartTwo()}")
 }
 
 object Day4 {

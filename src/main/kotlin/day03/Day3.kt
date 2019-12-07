@@ -5,7 +5,7 @@ import kotlin.math.abs
 
 fun main() {
     println("Part one: ${Day3.solvePartOne()}")
-    println("Parse two: ${Day3.solvePartTwo()}")
+    println("Part two: ${Day3.solvePartTwo()}")
 }
 
 object Day3 {
