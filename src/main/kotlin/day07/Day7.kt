@@ -15,16 +15,16 @@ fun main() {
 
 object Day7 {
 
-    private fun parseInput(): List<Int> = File("src/main/kotlin/day07/input.txt")
+    private fun parseInput(): List<Long> = File("src/main/kotlin/day07/input.txt")
         .readLines()
         .first()
         .split(",")
-        .map { it.toInt() }
+        .map { it.toLong() }
 
     fun solvePartOne(): String {
-        var highestSignal = 0
+        var highestSignal = 0L
 
-        permutations(0..4).forEach {
+        permutations(0L..4).forEach {
             val aOutput = Day5.doOperation(listOf(it.a), parseInput().toMutableList())
             val bOutput = Day5.doOperation(listOf(it.b, aOutput), parseInput().toMutableList())
             val cOutput = Day5.doOperation(listOf(it.c, bOutput), parseInput().toMutableList())
@@ -38,9 +38,8 @@ object Day7 {
 
     fun solvePartTwo(): String {
         var highestSignal = 0
-        val range = 5..9
 
-        permutations(5..9).forEach { perm ->
+        permutations(5L..9).forEach { perm ->
             val ampE = Amp().also {
                 it.inputs.add(perm.e)
             }
@@ -74,7 +73,7 @@ object Day7 {
         return highestSignal.toString()
     }
 
-    private fun permutations(range: IntRange): List<Permutation> {
+    private fun permutations(range: LongRange): List<Permutation> {
         val permutations = mutableListOf<Permutation>()
         for (a in range) {
             for (b in range) {
@@ -95,17 +94,17 @@ object Day7 {
     }
 
     data class Permutation(
-        val a: Int,
-        val b: Int,
-        val c: Int,
-        val d: Int,
-        val e: Int)
+        val a: Long,
+        val b: Long,
+        val c: Long,
+        val d: Long,
+        val e: Long)
 
     data class Amp(
-        val memory: MutableList<Int> = parseInput().toMutableList(),
+        val memory: MutableList<Long> = parseInput().toMutableList(),
         var latestOutput: Int = -1) : Callable<Int> {
         lateinit var nextAmp: Amp // Next amp in line which will receive output from this amp
-        val inputs = LinkedBlockingQueue<Int>()
+        val inputs = LinkedBlockingQueue<Long>()
 
         override fun call(): Int = doOperation(this)
     }
@@ -125,14 +124,14 @@ object Day7 {
 
             when (parsedOpcode) {
                 1 -> {
-                    val out = data[position.inc().inc().inc()]
+                    val out = data[position.inc().inc().inc()].toInt()
                     val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
                     val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
+                        data[data[position.inc().inc()].toInt()]
                     } else {
                         data[position.inc().inc()]
                     }
@@ -140,14 +139,14 @@ object Day7 {
                     position += 4
                 }
                 2 -> {
-                    val out = data[position.inc().inc().inc()]
+                    val out = data[position.inc().inc().inc()].toInt()
                     val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
                     val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
+                        data[data[position.inc().inc()].toInt()]
                     } else {
                         data[position.inc().inc()]
                     }
@@ -155,82 +154,82 @@ object Day7 {
                     position += 4
                 }
                 3 -> {
-                    val out = data[position.inc()]
+                    val out = data[position.inc()].toInt()
                     data[out] = amp.inputs.take() // Will block here until we get a value from previous amp
                     position += 2
                 }
                 4 -> {
                     val out = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
-                    amp.latestOutput = out
+                    amp.latestOutput = out.toInt()
                     amp.nextAmp.inputs.add(out)
                     position += 2
                 }
                 5 -> {
                     val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
                     val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
+                        data[data[position.inc().inc()].toInt()]
                     } else {
                         data[position.inc().inc()]
                     }
-                    if (inp1 != 0) {
-                        position = inp2
+                    if (inp1 != 0L) {
+                        position = inp2.toInt()
                     } else {
                         position += 3
                     }
                 }
                 6 -> {
                     val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
                     val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
+                        data[data[position.inc().inc()].toInt()]
                     } else {
                         data[position.inc().inc()]
                     }
-                    if (inp1 == 0) {
-                        position = inp2
+                    if (inp1 == 0L) {
+                        position = inp2.toInt()
                     } else {
                         position += 3
                     }
                 }
                 7 -> {
-                    val out = data[position.inc().inc().inc()]
+                    val out = data[position.inc().inc().inc()].toInt()
                     val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
                     val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
+                        data[data[position.inc().inc()].toInt()]
                     } else {
                         data[position.inc().inc()]
                     }
-                    data[out] = (inp1 < inp2) then 1 ?: 0
+                    data[out] = (inp1 < inp2) then 1L ?: 0L
                     position += 4
                 }
                 8 -> {
-                    val out = data[position.inc().inc().inc()]
+                    val out = data[position.inc().inc().inc()].toInt()
                     val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
+                        data[data[position.inc()].toInt()]
                     } else {
                         data[position.inc()]
                     }
                     val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
+                        data[data[position.inc().inc()].toInt()]
                     } else {
                         data[position.inc().inc()]
                     }
-                    data[out] = (inp1 == inp2) then 1 ?: 0
+                    data[out] = (inp1 == inp2) then 1L ?: 0L
                     position += 4
                 }
                 99 -> {

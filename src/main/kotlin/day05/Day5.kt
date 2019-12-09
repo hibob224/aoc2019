@@ -2,6 +2,7 @@ package day05
 
 import utils.then
 import java.io.File
+import java.lang.IllegalArgumentException
 
 fun main() {
     println("Part one: ${Day5.solvePartOne()}")
@@ -10,19 +11,20 @@ fun main() {
 
 object Day5 {
 
-    private fun parseInput(): List<Int> = File("src/main/kotlin/day05/input.txt")
+    private fun parseInput(): List<Long> = File("src/main/kotlin/day05/input.txt")
         .readLines()[0]
         .split(",")
-        .map { it.toInt() }
+        .map { it.toLong() }
 
     fun solvePartOne(): String = doOperation(listOf(1)).toString()
 
     fun solvePartTwo(): String = doOperation(listOf(5)).toString()
 
-    fun doOperation(input: List<Int>, data: MutableList<Int> = parseInput().toMutableList()): Int {
+    fun doOperation(input: List<Long>, data: MutableList<Long> = parseInput().toMutableList()): Long {
         var inputPosition = 0
-        val outputs = mutableListOf<Int>()
+        val outputs = mutableListOf<Long>()
         var position = 0
+        var relativeBase = 0
 
         do {
             val opcode = data[position].toString().padStart(5, '0')
@@ -33,115 +35,73 @@ object Day5 {
                 opcode[2].toString().toInt()
             )
 
+            val inp1 = when(modes[2]) {
+                0 -> data.getOrElse(data.getOrElse(position.inc()) { 0L }.toInt()) { 0L }
+                1 -> data.getOrElse(position.inc()) { 0L }
+                2 -> data.getOrElse(data.getOrElse(position.inc()) { 0L }.toInt() + relativeBase) { 0L }
+                else -> throw IllegalArgumentException("Fucked")
+            }
+            val inp2 = when(modes[1]) {
+                0 -> data.getOrElse(data.getOrElse(position.inc().inc()) { 0L }.toInt()) { 0L }
+                1 -> data.getOrElse(position.inc().inc()) { 0L }
+                2 -> data.getOrElse(data.getOrElse(position.inc().inc()) { 0L }.toInt() + relativeBase) { 0L }
+                else -> throw IllegalArgumentException("Fucked")
+            }
+            val inp3 = when(modes[0]) {
+                0, 1 -> data.getOrElse(position.inc().inc().inc()) { 0L }
+                2 -> data.getOrElse(position.inc().inc().inc()) { 0L } + relativeBase
+                else -> throw IllegalArgumentException("Fucked")
+            }.toInt()
+
             when (parsedOpcode) {
                 1 -> {
-                    val out = data[position.inc().inc().inc()]
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = inp1 + inp2
+                    data[inp3] = inp1 + inp2
                     position += 4
                 }
                 2 -> {
-                    val out = data[position.inc().inc().inc()]
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = inp1 * inp2
+                    data[inp3] = inp1 * inp2
                     position += 4
                 }
                 3 -> {
-                    val out = data[position.inc()]
-                    data[out] = input.getOrElse(inputPosition) { 0 }
+                    val out = when(modes[2]) {
+                        0, 1 -> data.getOrElse(position.inc()) { 0L }
+                        2 -> data.getOrElse(position.inc()) { 0L } + relativeBase
+                        else -> throw IllegalArgumentException("Fucked")
+                    }.toInt()
+                    data[out] = input.getOrElse(inputPosition) { 0L }
                     inputPosition++
                     position += 2
                 }
                 4 -> {
-                    val out = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    outputs.add(out)
+                    outputs.add(inp1)
+                    println(inp1)
                     position += 2
                 }
                 5 -> {
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    if (inp1 != 0) {
-                        position = inp2
+                    if (inp1 != 0L) {
+                        position = inp2.toInt()
                     } else {
                         position += 3
                     }
                 }
                 6 -> {
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    if (inp1 == 0) {
-                        position = inp2
+                    if (inp1 == 0L) {
+                        position = inp2.toInt()
                     } else {
                         position += 3
                     }
                 }
                 7 -> {
-                    val out = data[position.inc().inc().inc()]
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = (inp1 < inp2) then 1 ?: 0
+                    data[inp3] = (inp1 < inp2) then 1L ?: 0L
                     position += 4
                 }
                 8 -> {
-                    val out = data[position.inc().inc().inc()]
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()]]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()]]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = (inp1 == inp2) then 1 ?: 0
+                    data[inp3] = (inp1 == inp2) then 1L ?: 0L
                     position += 4
+                }
+                9 -> {
+                    relativeBase += inp1.toInt()
+                    position += 2
                 }
                 99 -> return outputs.last()
                 else -> throw IllegalStateException("Unknown opcode $opcode")
