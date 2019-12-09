@@ -1,11 +1,8 @@
 package day07
 
-import day05.Day5
-import utils.then
+import IntCodeComputer
 import java.io.File
-import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
 import kotlin.math.max
 
 fun main() {
@@ -23,43 +20,54 @@ object Day7 {
 
     fun solvePartOne(): String {
         var highestSignal = 0L
+        val list = parseInput()
 
-        permutations(0L..4).forEach {
-            val aOutput = Day5.doOperation(listOf(it.a), parseInput().toMutableList())
-            val bOutput = Day5.doOperation(listOf(it.b, aOutput), parseInput().toMutableList())
-            val cOutput = Day5.doOperation(listOf(it.c, bOutput), parseInput().toMutableList())
-            val dOutput = Day5.doOperation(listOf(it.d, cOutput), parseInput().toMutableList())
-            val eOutput = Day5.doOperation(listOf(it.e, dOutput), parseInput().toMutableList())
-            highestSignal = max(highestSignal, eOutput)
+        permutations(0..4L).forEach { perm ->
+            val ampA = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.a, 0)
+            }.call()
+            val ampB = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.b, ampA)
+            }.call()
+            val ampC = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.c, ampB)
+            }.call()
+            val ampD = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.d, ampC)
+            }.call()
+            highestSignal = max(IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.e, ampD)
+            }.call(), highestSignal)
         }
 
         return highestSignal.toString()
     }
 
     fun solvePartTwo(): String {
-        var highestSignal = 0
+        val list = parseInput()
+        var highestSignal = 0L
 
         permutations(5L..9).forEach { perm ->
-            val ampE = Amp().also {
-                it.inputs.add(perm.e)
+            val ampE = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.e)
             }
-            val ampD = Amp().also {
-                it.inputs.add(perm.d)
-                it.nextAmp = ampE
+            val ampD = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.d)
+                it.outputComputer = ampE
             }
-            val ampC = Amp().also {
-                it.inputs.add(perm.c)
-                it.nextAmp = ampD
+            val ampC = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.c)
+                it.outputComputer = ampD
             }
-            val ampB = Amp().also {
-                it.inputs.add(perm.b)
-                it.nextAmp = ampC
+            val ampB = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.b)
+                it.outputComputer = ampC
             }
-            val ampA = Amp().also {
-                it.inputs.addAll(listOf(perm.a, 0)) // Amp A gets an extra starting input of 0 as per instructions
-                it.nextAmp = ampB
+            val ampA = IntCodeComputer(list.toLongArray()).also {
+                it.addInput(perm.a, 0) // Amp A gets an extra starting input of 0 as per instructions
+                it.outputComputer = ampB
             }
-            ampE.nextAmp = ampA
+            ampE.outputComputer = ampA
 
             Executors.newCachedThreadPool().also {
                 it.submit(ampA)
@@ -99,144 +107,4 @@ object Day7 {
         val c: Long,
         val d: Long,
         val e: Long)
-
-    data class Amp(
-        val memory: MutableList<Long> = parseInput().toMutableList(),
-        var latestOutput: Int = -1) : Callable<Int> {
-        lateinit var nextAmp: Amp // Next amp in line which will receive output from this amp
-        val inputs = LinkedBlockingQueue<Long>()
-
-        override fun call(): Int = doOperation(this)
-    }
-
-    fun doOperation(amp: Amp): Int {
-        val data = amp.memory
-        var position = 0
-
-        do {
-            val opcode = data[position].toString().padStart(5, '0')
-            val parsedOpcode = opcode.substring(opcode.lastIndex.dec()).toInt()
-            val modes = mutableListOf(
-                opcode[0].toString().toInt(),
-                opcode[1].toString().toInt(),
-                opcode[2].toString().toInt()
-            )
-
-            when (parsedOpcode) {
-                1 -> {
-                    val out = data[position.inc().inc().inc()].toInt()
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()].toInt()]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = inp1 + inp2
-                    position += 4
-                }
-                2 -> {
-                    val out = data[position.inc().inc().inc()].toInt()
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()].toInt()]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = inp1 * inp2
-                    position += 4
-                }
-                3 -> {
-                    val out = data[position.inc()].toInt()
-                    data[out] = amp.inputs.take() // Will block here until we get a value from previous amp
-                    position += 2
-                }
-                4 -> {
-                    val out = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    amp.latestOutput = out.toInt()
-                    amp.nextAmp.inputs.add(out)
-                    position += 2
-                }
-                5 -> {
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()].toInt()]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    if (inp1 != 0L) {
-                        position = inp2.toInt()
-                    } else {
-                        position += 3
-                    }
-                }
-                6 -> {
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()].toInt()]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    if (inp1 == 0L) {
-                        position = inp2.toInt()
-                    } else {
-                        position += 3
-                    }
-                }
-                7 -> {
-                    val out = data[position.inc().inc().inc()].toInt()
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()].toInt()]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = (inp1 < inp2) then 1L ?: 0L
-                    position += 4
-                }
-                8 -> {
-                    val out = data[position.inc().inc().inc()].toInt()
-                    val inp1 = if (modes[2] == 0) {
-                        data[data[position.inc()].toInt()]
-                    } else {
-                        data[position.inc()]
-                    }
-                    val inp2 = if (modes[1] == 0) {
-                        data[data[position.inc().inc()].toInt()]
-                    } else {
-                        data[position.inc().inc()]
-                    }
-                    data[out] = (inp1 == inp2) then 1L ?: 0L
-                    position += 4
-                }
-                99 -> {
-                    return amp.latestOutput
-                }
-                else -> throw IllegalStateException("Unknown opcode $opcode")
-            }
-        } while (true)
-    }
 }

@@ -1,5 +1,6 @@
 package day05
 
+import IntCodeComputer
 import utils.then
 import java.io.File
 import java.lang.IllegalArgumentException
@@ -16,9 +17,9 @@ object Day5 {
         .split(",")
         .map { it.toLong() }
 
-    fun solvePartOne(): String = doOperation(listOf(1)).toString()
+    fun solvePartOne(): String = IntCodeComputer(parseInput().toLongArray()).also { it.addInput(1) }.call().toString()
 
-    fun solvePartTwo(): String = doOperation(listOf(5)).toString()
+    fun solvePartTwo(): String = IntCodeComputer(parseInput().toLongArray()).also { it.addInput(5) }.call().toString()
 
     fun doOperation(input: List<Long>, data: MutableList<Long> = parseInput().toMutableList()): Long {
         var inputPosition = 0

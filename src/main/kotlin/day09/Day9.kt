@@ -1,5 +1,6 @@
 package day09
 
+import IntCodeComputer
 import day05.Day5
 import java.io.File
 
@@ -19,9 +20,7 @@ object Day9 {
 
     fun solvePartTwo(): String = solve(2)
 
-    private fun solve(input: Long): String {
-        val data = parseInput().toMutableList()
-        repeat(100_000) { data.add(0) }
-        return Day5.doOperation(listOf(input), data).toString()
-    }
+    private fun solve(input: Long): String = IntCodeComputer(parseInput().toLongArray()).also {
+        it.addInput(input)
+    }.call().toString()
 }

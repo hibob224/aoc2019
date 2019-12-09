@@ -7,11 +7,11 @@ internal class Day1Test {
 
     @Test
     fun solvePartOne() {
-        assertEquals(Day1.solvePartOne(), "3232358")
+        assertEquals("3232358", Day1.solvePartOne())
     }
 
     @Test
     fun solvePartTwo() {
-        assertEquals(Day1.solvePartTwo(), "4845669")
+        assertEquals("4845669", Day1.solvePartTwo())
     }
 }
