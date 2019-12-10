@@ -1,5 +1,6 @@
 package day03
 
+import utils.Point
 import java.io.File
 import kotlin.math.abs
 
@@ -10,8 +11,8 @@ fun main() {
 
 object Day3 {
 
-    private val lineOne = mutableListOf(Point(0, 0))
-    private val lineTwo = mutableListOf(Point(0, 0))
+    private val lineOne = mutableListOf(Wire(0, 0))
+    private val lineTwo = mutableListOf(Wire(0, 0))
 
     init {
         val lineOneInput = parseInput()[0]
@@ -22,19 +23,20 @@ object Day3 {
         lineTwo.removeAt(0)
     }
 
-    private fun parseInput(): List<List<String>> = File("src/main/kotlin/day03/input.txt").readLines().map { it.split(",") }
+    private fun parseInput(): List<List<String>> =
+        File("src/main/kotlin/day03/input.txt").readLines().map { it.split(",") }
 
-    fun solvePartOne(): String = lineOne.intersect(lineTwo).map { it.manhattan() }.min().toString()
+    fun solvePartOne(): String = lineOne.intersect(lineTwo).map { it.distanceFromOrigin() }.min().toString()
 
     fun solvePartTwo(): String = lineOne.intersect(lineTwo).map { intersect ->
         lineOne.first { intersect == it }.steps + lineTwo.first { intersect == it }.steps
     }.min().toString()
 
-    data class Point(val x: Int, val y: Int) {
+    class Wire(x: Int, y: Int) : Point(x, y) {
 
         var steps = 0
 
-        fun move(movement: String): List<Point> {
+        fun move(movement: String): List<Wire> {
             val direction = movement.first()
             val steps = movement.substring(1).toInt()
 
@@ -49,10 +51,8 @@ object Day3 {
             }
         }
 
-        fun manhattan(): Int = abs(x) + abs(y)
+        fun distanceFromOrigin(): Int = manhattan(Point(0, 0))
 
-        override fun toString(): String {
-            return "${super.toString()} - $steps"
-        }
+        override fun copy(x: Int, y: Int): Wire = Wire(x, y)
     }
 }
