@@ -1,4 +1,5 @@
 import utils.then
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Callable
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -9,6 +10,7 @@ class IntCodeComputer(
     private val memory = LongArray(10000) { 0 }
     private val inputs = LinkedBlockingQueue<Long>()
     var outputComputer: IntCodeComputer? = null
+    var outputArray: BlockingQueue<Long>? = null
 
     init {
         inpMemory.copyInto(memory)
@@ -70,6 +72,7 @@ class IntCodeComputer(
                 4 -> {
                     latestOutput = inp1
                     outputComputer?.inputs?.add(inp1)
+                    outputArray?.add(inp1)
                     position += 2
                 }
                 5 -> {
