@@ -3,14 +3,20 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Callable
 import java.util.concurrent.LinkedBlockingQueue
 
+typealias Input = () -> Long
+typealias Output = (Long) -> Unit
+
 class IntCodeComputer(
     inpMemory: LongArray,
-    var latestOutput: Long = -1) : Callable<Long> {
+    var latestOutput: Long = -1
+) : Callable<Long> {
 
     private val memory = LongArray(10000) { 0 }
     private val inputs = LinkedBlockingQueue<Long>()
     var outputComputer: IntCodeComputer? = null
     var outputArray: BlockingQueue<Long>? = null
+    var input: Input? = null
+    var output: Output? = null
 
     init {
         inpMemory.copyInto(memory)
@@ -33,19 +39,19 @@ class IntCodeComputer(
                 opcode[2].toString().toInt()
             )
 
-            val inp1 = when(modes[2]) {
+            val inp1 = when (modes[2]) {
                 0 -> memory.getOrElse(memory.getOrElse(position.inc()) { 0L }.toInt()) { 0L }
                 1 -> memory.getOrElse(position.inc()) { 0L }
                 2 -> memory.getOrElse(memory.getOrElse(position.inc()) { 0L }.toInt() + relativeBase) { 0L }
                 else -> throw IllegalArgumentException("Fucked")
             }
-            val inp2 = when(modes[1]) {
+            val inp2 = when (modes[1]) {
                 0 -> memory.getOrElse(memory.getOrElse(position.inc().inc()) { 0L }.toInt()) { 0L }
                 1 -> memory.getOrElse(position.inc().inc()) { 0L }
                 2 -> memory.getOrElse(memory.getOrElse(position.inc().inc()) { 0L }.toInt() + relativeBase) { 0L }
                 else -> throw IllegalArgumentException("Fucked")
             }
-            val inp3 = when(modes[0]) {
+            val inp3 = when (modes[0]) {
                 0, 1 -> memory.getOrElse(position.inc().inc().inc()) { 0L }
                 2 -> memory.getOrElse(position.inc().inc().inc()) { 0L } + relativeBase
                 else -> throw IllegalArgumentException("Fucked")
@@ -61,16 +67,19 @@ class IntCodeComputer(
                     position += 4
                 }
                 3 -> {
-                    val out = when(modes[2]) {
+                    val out = when (modes[2]) {
                         0, 1 -> memory.getOrElse(position.inc()) { 0L }
                         2 -> memory.getOrElse(position.inc()) { 0L } + relativeBase
                         else -> throw IllegalArgumentException("Fucked")
                     }.toInt()
-                    memory[out] = inputs.take()
+                    input?.let {
+                        memory[out] = it.invoke()
+                    } ?: kotlin.run { memory[out] = inputs.take() }
                     position += 2
                 }
                 4 -> {
                     latestOutput = inp1
+                    output?.invoke(inp1)
                     outputComputer?.inputs?.add(inp1)
                     outputArray?.add(inp1)
                     position += 2
