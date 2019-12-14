@@ -19,7 +19,6 @@ object Day12 {
                 Moon(x.toInt(), y.toInt(), z.toInt())
             }
 
-    //8362
     fun solvePartOne(): String {
         val moons = parseInput()
         val pairs = listOf(
@@ -41,8 +40,40 @@ object Day12 {
     }
 
     fun solvePartTwo(): String {
-        return ""
+        val input = parseInput()
+        val moons = input.toList()
+        val pairs = listOf(
+            moons[0] to moons[1],
+            moons[0] to moons[2],
+            moons[0] to moons[3],
+            moons[1] to moons[2],
+            moons[1] to moons[3],
+            moons[2] to moons[3])
+        var xIndex = 0L
+        var yIndex = 0L
+        var zIndex = 0L
+        var loop = 0L
+
+        while (xIndex == 0L || yIndex == 0L || zIndex == 0L) {
+            loop += 1
+            pairs.forEach { it.first.updateVelocity(it.second) }
+            moons.forEach { it.applyVelocity() }
+            if (xIndex == 0L && moons.all { it.xVelocity == 0 } && input.map { it.x } == moons.map { it.x }) {
+                xIndex = loop
+            }
+            if (yIndex == 0L && moons.all { it.yVelocity == 0 } && input.map { it.y } == moons.map { it.y }) {
+                yIndex = loop
+            }
+            if (zIndex == 0L && moons.all { it.zVelocity == 0 } && input.map { it.z } == moons.map { it.z }) {
+                zIndex = loop
+            }
+        }
+
+        return lcm(xIndex, lcm(yIndex, zIndex)).times(2).toString()
     }
+
+    private fun gcd(a: Long, b: Long): Long = if (b != 0L) gcd(b, a % b) else a
+    private fun lcm(a: Long, b: Long): Long = a * b / gcd(a, b)
 }
 
 data class Moon(
@@ -82,8 +113,6 @@ data class Moon(
         y += yVelocity
         z += zVelocity
     }
-
-    fun standStill(): Boolean = (xVelocity == 0 && yVelocity == 0 && zVelocity == 0)
 
     fun energy(): Int = (abs(x) + abs(y) + abs(z)) * (abs(xVelocity) + abs(yVelocity) + abs(zVelocity))
 
